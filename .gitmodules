@@ -1,0 +1,6 @@
+[submodule "preprocessing/GetToonImage"]
+	path = preprocessing/GetToonImage
+	url = https://github.com/w1jyun/getToonImage.git
+[submodule "preprocessing/sketchKeras"]
+	path = preprocessing/sketchKeras
+	url = https://github.com/w1jyun/sketchKeras.git
