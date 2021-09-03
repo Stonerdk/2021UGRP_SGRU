@@ -13,15 +13,15 @@ def get(name, path, output_dir):
     height = float(from_mat.shape[0])
     new_width = 0
     new_height = 0
-    from_mat = cv2.resize(from_mat, (256, 256), interpolation=cv2.INTER_AREA)
-    new_width = 256
-    new_height = 256
+    from_mat = cv2.resize(from_mat, (512, 512), interpolation=cv2.INTER_AREA)
+    new_width = 512
+    new_height = 512
     from_mat = from_mat.transpose((2, 0, 1))
     light_map = np.zeros(from_mat.shape, dtype=np.float)
     for channel in range(3):
         light_map[channel] = get_light_map_single(from_mat[channel])
     light_map = normalize_pic(light_map)
-    light_map = resize_img_256_3d(light_map)
+    light_map = resize_img_512_3d(light_map)
 
     line_mat = mod.predict(light_map, batch_size=1)
     line_mat = line_mat.transpose((3, 1, 2, 0))[0]
