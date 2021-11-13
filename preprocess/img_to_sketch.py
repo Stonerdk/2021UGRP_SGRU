@@ -1,9 +1,10 @@
 from keras.models import load_model
 import cv2
 import numpy as np
-from helper import *
+from img_to_sketch_helper import *
 import os
 import sys
+from glob import glob
 
 mod = load_model('mod.h5')
 
@@ -33,19 +34,20 @@ def get(name, path, output_dir):
     denoise_filter('sketchKeras', line_mat, output_dir + '/'+ name)
     return
 
-#default directory name
-if len(sys.argv) != 3:
-    webtoon_dir_name = './toon'
-    sketch_dir_name = './sketch'   
-else: 
-    webtoon_dir_name = sys.argv[1]
-    sketch_dir_name = sys.argv[2]
 
-file_list = os.listdir(webtoon_dir_name)
-print(file_list)
+def save_sketch(original_dir, sketch_dir):
+    for fname in glob(os.path.join(original_dir, "*.png")):
+        img_name = os.path.split(fname)[1]
+        get(img_name, fname, sketch_dir)
+        print(img_name + " ended")
 
-for img in file_list:
-    img_path = webtoon_dir_name + '/' + img
-    print(img +' started')
-    get(img, img_path, sketch_dir_name)
-    print(img +' ended')
+
+if __name__ == "__main__":
+
+    webtoon_dir_name = os.path.join(sys.argv[1], "original")
+    sketch_dir_name = os.path.join(sys.argv[1], "sketch")
+
+    if not os.path.exists(sketch_dir_name):
+        os.mkdir(sketch_dir_name)
+
+    save_sketch(webtoon_dir_name, sketch_dir_name)
