@@ -150,6 +150,29 @@ def cutdetector(inputdir, outputdir, episodenum, dest_size): #inputdir: roughcut
             print('error: ', 'Process finished with exit code -1073741819 (0xC0000005)')
             continue
 
+def cut_crop(path,save_path):
+    img=cv2.imread(path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    th, threshed = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11,11))
+    morphed = cv2.morphologyEx(threshed, cv2.MORPH_CLOSE, kernel)
+    cnts = cv2.findContours(morphed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    cnt = sorted(cnts, key=cv2.contourArea)
+    print(len(cnt))
+    for i in range (len(cnt)):
+        border=0
+        x,y,w,h = cv2.boundingRect(cnt[i])
+        dst = img[y:y+h, x:x+w]
+        cv2.imwrite(save_path+'_'+str(i)+".png", dst)
+        cutcrop=cv2.imread(save_path+'_'+str(i)+".png")
+        if h>w:
+            dst_=cv2.copyMakeBorder(cutcrop,0,0,int((h-w)/2),int((h-w)/2),cv2.BORDER_CONSTANT,(255,255,255))
+        else:
+            dst_=cv2.copyMakeBorder(cutcrop,int((w-h)/2),int((w-h)/2),0,0,cv2.BORDER_CONSTANT,(255,255,255))
+        scale = cv2.resize(dst_,(512,512),interpolation=cv2.INTER_LINEAR)
+        cv2.imwrite(save_path+'_'+str(i)+".png",scale)
+
+
 def cut_raw_images(crawling_dir, roughcut_dir, cut_dir):
     episodelist = os.listdir(crawling_dir)
     for elist in episodelist:
