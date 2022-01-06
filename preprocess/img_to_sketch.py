@@ -10,11 +10,9 @@ mod = load_model('mod.h5')
 
 def get(name, path, output_dir):
     from_mat = cv2.imread(path)
-    width = float(from_mat.shape[1])
-    height = float(from_mat.shape[0])
-    new_width = 0
-    new_height = 0
-    from_mat = cv2.resize(from_mat, (512, 512), interpolation=cv2.INTER_AREA)
+
+    from_mat = cv2.copyMakeBorder(from_mat, 128, 128, 128, 128, cv2.BORDER_REPLICATE)
+    cv2.imwrite(output_dir + "/extend.png",from_mat)
     new_width = 512
     new_height = 512
     from_mat = from_mat.transpose((2, 0, 1))
@@ -40,6 +38,10 @@ def save_sketch(original_dir, sketch_dir):
         img_name = os.path.split(fname)[1]
         get(img_name, fname, sketch_dir)
         print(img_name + " ended")
+
+
+def save_sketch_single(original_file, output_dir):
+    get("sketch.png", original_file, output_dir)
 
 
 if __name__ == "__main__":

@@ -45,8 +45,7 @@ if __name__ == "__main__":
     segmented_col_dir = sdgen.new_dir("segmented_color")
     segmented_sub_dir = sdgen.new_dir("segmented_sub")
 
-    webcrawling(args.start_url, args.episode_cnt, crawling_dir)
-    # 서버 작동 시 이를 지우는 게 좋을듯!
+    # webcrawling(args.start_url, args.episode_cnt, crawling_dir)
     
     if args.size == 512:
         cut_raw_images(crawling_dir, roughcut_dir, original_dir)

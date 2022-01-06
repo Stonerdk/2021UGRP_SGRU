@@ -105,12 +105,12 @@ def resize_img_512_3d(img):
     return zeros.transpose((1,2,3,0))
 
 def resize_img_256(img):
-    zeros = np.zeros((512,512,img.shape[2]), dtype=np.float)
+    zeros = np.zeros((256,256,img.shape[2]), dtype=np.float)
     zeros[:img.shape[0], :img.shape[1]] = img
     return zeros
 
 def resize_img_256_3d(img):
-    zeros = np.zeros((1,3,512,512), dtype=np.float)
+    zeros = np.zeros((1,3,256,256), dtype=np.float)
     zeros[0 , 0 : img.shape[0] , 0 : img.shape[1] , 0 : img.shape[2]] = img
     return zeros.transpose((1,2,3,0))
 
@@ -134,6 +134,7 @@ def denoise_filter(name,img,path):
     mat[mat > 255] = 255
     mat=mat.astype(np.uint8)
     mat = ndimage.median_filter(mat, 1)
+    mat = mat[128:384, 128:384]
     cv2.imwrite(path,mat)
     return
 
@@ -203,13 +204,13 @@ def debug_pic_helper():
         mat_color = cv2.imread(color_path)
         mat_color=get_light_map(mat_color)
         mat_color=normalize_pic(mat_color)
-        mat_color=resize_img_512(mat_color)
+        mat_color=resize_img_256(mat_color)
         show_double_active_img('mat_color',mat_color)
 
         mat_gray = cv2.imread(gray_path)
         mat_gray=get_gray_map(mat_gray)
         mat_gray=normalize_pic(mat_gray)
-        mat_gray = resize_img_512(mat_gray)
+        mat_gray = resize_img_256(mat_gray)
         show_active_img('mat_gray',mat_gray)
 
         cv2.waitKey(1000)

@@ -8,3 +8,5 @@ preprocess/mod.h5
 preprocess/LR
 preprocess/LR224
 preprocess/error_list.txt
+preprocess/preprocessing_input
+preprocess/output
