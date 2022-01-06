@@ -53,11 +53,12 @@ def sketch_to_segmented(sketch_dir, segmented_dir):
     print(failed)
 
 
-def sketch_to_segmented_single(original_file, sketch_file, output_dir):
+def sketch_to_segmented_single(original_file, sketch_file, sketch_transparent_file, output_dir):
     im = cv2.imread(sketch_file, cv2.IMREAD_GRAYSCALE)
     segmented_result = trap_ball(im)
     cv2.imwrite(os.path.join(output_dir, "segmented.png"), segmented_result)
 
+    sketch_transparent_pix = Image.open(sketch_transparent_file).load()
     toon_pix = Image.open(original_file).load()
     segmented_pix = Image.open(os.path.join(output_dir, "segmented.png")).load()
 
@@ -89,39 +90,63 @@ def sketch_to_segmented_single(original_file, sketch_file, output_dir):
     segmented_color_im = Image.new(mode = "RGB", size = (WIDTH, HEIGHT), color = (0, 128, 255))
     segmented_color_pix = segmented_color_im.load()
 
-    segmented_subtract_im = Image.new(mode = "RGBA", size = (WIDTH, HEIGHT), color = (0, 0, 0, 0))
-    segmented_subtract_pix = segmented_subtract_im.load()
-    
     # get capital color from each segments
     for cluster in clusters:
         red, green, blue = 0, 0, 0
+        d = 0
         for x, y in cluster:
+            w = 1 - sketch_transparent_pix[x, y][3] / 255
             r, g, b = toon_pix[x, y]
-            red, green, blue = red + r, green + g, blue + b
-        cluster_size = len(cluster)
-        col = (red // cluster_size, green // cluster_size, blue // cluster_size)
+            red, green, blue = red + r * w, green + g * w, blue + b * w
+            d += w
+        col = (int(red / d), int(green / d), int(blue / d))
         for x, y in cluster:
-            if col[0] >= 245:
+            if sum(col) / 3 >= 235:
                 col = (255, 255, 255)
+            if sum(col) / 3 < 20:
+                col = (0,0,0)
             segmented_color_pix[x, y] = col
-            # segmented_subtract_pix[x, y] = subtract_color(col, toon_pix[x, y])
     
     segmented_color_im.save(os.path.join(output_dir, "segmented.png"))
-    # segmented_subtract_im.save(os.path.join(segmented_subtract_dir, os.path.split(fname)[1]))
     
 
-def subtract_color_single(original_file, segmented_file, output_dir, size = 256):
+def subtract_color_single(original_file, segmented_file, sketch_transparent_file, output_dir, size = 256):
     original_pix = Image.open(original_file).load()
     segmented_pix = Image.open(segmented_file).load()
+    sketch_transparent_pix = Image.open(sketch_transparent_file).load()
 
     subtract_im = Image.new(mode = 'RGBA', size = (256,256))
     subtract_pix = subtract_im.load()
     for x in range(256):
         for y in range(256):
-            subtract_pix[x, y] = subtract_color(segmented_pix[x, y][:3], original_pix[x, y])
+            r0, g0, b0 = segmented_pix[x, y][:3]
+            r1, g1, b1 = original_pix[x, y]
+            base_a = sketch_transparent_pix[x, y][3]
+            r, g, b = 0, 0, 0
+            min_list = [1]
+            if r0 != 0:
+                min_list.append(r1 / r0)
+            if b0 != 0:
+                min_list.append(b1 / b0)
+            if g0 != 0:
+                min_list.append(g1 / g0)
+            if r0 != 255:
+                min_list.append((255 - r1) / (255 - r0))
+            if b0 != 255:
+                min_list.append((255 - b1) / (255 - b0))
+            if g0 != 255:
+                min_list.append((255 - g1) / (255 - g0))
+            alpha = 1 - min(min_list)
+            if alpha != 0:
+                r = int(min(255, (r1 - (1 - alpha) * r0) / alpha))
+                g = int(min(255, (g1 - (1 - alpha) * g0) / alpha))
+                b = int(min(255, (b1 - (1 - alpha) * b0) / alpha))
+            alpha = min(alpha * 255, 64)
+            alpha = int(alpha * (1 - base_a / 255))
+            subtract_pix[x, y] = (r, g, b, alpha)
     
     subtract_im.save(os.path.join(output_dir, "subtract.png"))
-    
+
 
 def subtract_color(src_rgb, dest_rgb):
     r0, g0, b0 = src_rgb
